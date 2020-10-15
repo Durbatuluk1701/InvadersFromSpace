@@ -10,42 +10,53 @@ for (let i = 0; i < 200; i += 20) {
     }
 }
 
-let player = {
+let Player = {
     coords: [0, 0],
     moveRight: () => {
-        if (!(player.coords[0] + 20 >= canvas.width)) {
-            player.coords = [player.coords[0] + 5, player.coords[1]];
+        if (!(Player.coords[0] + 20 >= canvas.width)) {
+            Player.coords = [Player.coords[0] + 5, Player.coords[1]];
         }
         drawPlayer();
     },
     moveLeft: () => {
-        if (!(player.coords[0] <= 0)) {
-            player.coords = [player.coords[0] - 5, player.coords[1]];
+        if (!(Player.coords[0] <= 0)) {
+            Player.coords = [Player.coords[0] - 5, Player.coords[1]];
         }
         drawPlayer();
     },
     fireBullet: () => {
-        shootBullet(player.coords[0] + 10);
+        shootBullet(Player.coords[0] + 10);
     }
+}
+
+const Game = {
+    opStack: [],
+    batchGooberMove: () => { },
+    batchPlayerMove: () => { },
+    batchPlayerShot: () => { }
 }
 
 const handleKeys = (e) => {
     console.log(e.key);
     if (e.key.toLowerCase() === "d") {
-        player.moveRight();
+        Player.moveRight();
     }
     if (e.key.toLowerCase() === "a") {
         console.log("moving left");
-        player.moveLeft();
+        Player.moveLeft();
     }
     if (e.key === " ") {
         console.log("Firing Bullet");
-        player.fireBullet();
+        Player.fireBullet();
     }
 }
 
-const stopGame = () => {
-    alert("Game Over!");
+const stopGame = (winner) => {
+    if (!winner) {
+        alert("Game Over You LOSE!");
+    } else {
+        alert("Victory!");
+    }
     clearCanvas();
     document.removeEventListener("keypress", handleKeys);
 }
@@ -68,31 +79,56 @@ const checkHit = (board, bullet) => {
     }
 }
 
+const Bullets = {
+    bulletObj: {
+        "bulletUuid": "bulletNum"
+    },
+    addBullet: (bulletUuid, bulletNum) => {
+        Bullets.bulletObj[`${bulletUuid}`] = bulletNum;
+    },
+    removeBullet: (bulletUuid) => {
+        let bulletNum = Bullets.bulletObj[`${bulletUuid}`];
+        delete Bullets.bulletObj[`${bulletUuid}`];
+        clearInterval(bulletNum);
+    }
+}
+
 const shootBullet = (startXCoord) => {
     // First path
     let bulletDepth = 0;
+    let bulletUuid = Math.floor(Math.random() * 1000);
     let bulletInterval = setInterval(() => {
+        console.log(bulletUuid);
         context.beginPath();
         context.strokeStyle = 'lime';
         context.moveTo(startXCoord, canvas.height - 20 - bulletDepth);
         context.lineTo(startXCoord, canvas.height - 30 - bulletDepth);
         context.stroke();
         bulletDepth += 5;
-        checkHit(enemyArr, [startXCoord, canvas.height - 20 - bulletDepth]);
-        if (enemyArr.length === 0) {
-            stopGame();
+        let hit = checkHit(enemyArr, [startXCoord, canvas.height - 20 - bulletDepth]);
+        if (hit) {
+            console.log("ending");
+            Bullets.removeBullet(bulletUuid);
         }
-    }, 100);
+        if (enemyArr.length === 0) {
+            stopGame(true);
+        }
+    }, 100, bulletUuid);
+    Bullets.addBullet(bulletUuid, bulletInterval);
     setTimeout(() => {
-        clearInterval(bulletInterval);
+        Bullets.removeBullet(bulletUuid);
     }, 2500);
 }
 
 const fillGoobers = (enemyBoard) => {
     clearUpperCanvas();
-    enemyBoard.forEach(coords => {
-        context.drawImage(goober, coords[0], coords[1], 20, 20);
-    })
+    for (let i = 0; i < enemyBoard.length; i++) {
+        if (enemyBoard[i][1] + 20 >= canvas.height) {
+            stopGame(false);
+            break;
+        }
+        context.drawImage(goober, enemyBoard[i][0], enemyBoard[i][1], 20, 20);
+    }
 }
 
 const clearCanvas = () => {
@@ -112,13 +148,13 @@ const gooberChanges = (canvas, direction, currentBoard) => {
     let arrChanges = [0, 0];
     currentBoard.forEach((arr) => {
         if (direction === "right") {
-            if (arr[0] + 5 >= canvas.width) {
+            if (arr[0] + 20 >= canvas.width) {
                 direction = "left";
                 arrChanges[1] = arrChanges[1] + 5;
             }
         }
         else if (direction === "left") {
-            if (arr[0] - 5 <= 0) {
+            if (arr[0] <= 0) {
                 direction = "right";
                 arrChanges[1] = arrChanges[1] + 5;
             }
@@ -144,7 +180,7 @@ const gooberDance = () => {
             })
             clearUpperCanvas();
             fillGoobers(enemyArr);
-        }, i * 500);
+        }, i * 200);
     }
 }
 
@@ -156,14 +192,15 @@ goober.addEventListener("load", () => {
 const startGame = () => {
     drawPlayer();
     document.addEventListener("keypress", handleKeys)
+    gooberDance();
 }
 
 const drawPlayer = () => {
     context.fillStyle = "red";
-    console.log(player.coords);
+    console.log(Player.coords);
     clearPlayerRow();
     context.fillRect(
-        player.coords[0],
+        Player.coords[0],
         canvas.height - 20,
         20,
         20);
