@@ -29,9 +29,28 @@ let player = {
     }
 }
 
+const handleKeys = (e) => {
+    console.log(e.key);
+    if (e.key.toLowerCase() === "d") {
+        player.moveRight();
+    }
+    if (e.key.toLowerCase() === "a") {
+        console.log("moving left");
+        player.moveLeft();
+    }
+    if (e.key === " ") {
+        console.log("Firing Bullet");
+        player.fireBullet();
+    }
+}
+
+const stopGame = () => {
+    alert("Game Over!");
+    clearCanvas();
+    document.removeEventListener("keypress", handleKeys);
+}
+
 const checkHit = (board, bullet) => {
-    console.log(board);
-    console.log(bullet);
     for (let i = 0; i < board.length; i++) {
         let row = board[i];
         // Checks X within Row range
@@ -60,6 +79,9 @@ const shootBullet = (startXCoord) => {
         context.stroke();
         bulletDepth += 5;
         checkHit(enemyArr, [startXCoord, canvas.height - 20 - bulletDepth]);
+        if (enemyArr.length === 0) {
+            stopGame();
+        }
     }, 100);
     setTimeout(() => {
         clearInterval(bulletInterval);
@@ -94,31 +116,34 @@ const gooberChanges = (canvas, direction, currentBoard) => {
                 direction = "left";
                 arrChanges[1] = arrChanges[1] + 5;
             }
-            arrChanges[0] = arrChanges[0] + 5;
         }
         else if (direction === "left") {
             if (arr[0] - 5 <= 0) {
                 direction = "right";
                 arrChanges[1] = arrChanges[1] + 5;
             }
-            arrChanges[0] = arrChanges[0] - 5;
         }
     });
+    if (direction === "right") {
+        arrChanges[0] = arrChanges[0] + 5;
+    } else {
+        arrChanges[0] = arrChanges[0] - 5;
+    }
     return [arrChanges, direction];
 }
 
 const gooberDance = () => {
-    let newBoard = enemyArr;
     let direction = "right";
-    for (let i = 0; i < 505; i++) {
+    for (let i = 0; i < 100; i++) {
         setTimeout(() => {
-            let [arrChanges, newDir] = gooberChanges(canvas, direction, newBoard);
+            let [arrChanges, newDir] = gooberChanges(canvas, direction, enemyArr);
+            console.log(arrChanges, enemyArr);
             direction = newDir;
-            newBoard = newBoard.map(arr => {
+            enemyArr = enemyArr.map(arr => {
                 return [arr[0] + arrChanges[0], arr[1] + arrChanges[1]];
             })
-            clearCanvas();
-            fillGoobers(newBoard);
+            clearUpperCanvas();
+            fillGoobers(enemyArr);
         }, i * 500);
     }
 }
@@ -130,6 +155,7 @@ goober.addEventListener("load", () => {
 
 const startGame = () => {
     drawPlayer();
+    document.addEventListener("keypress", handleKeys)
 }
 
 const drawPlayer = () => {
@@ -142,18 +168,3 @@ const drawPlayer = () => {
         20,
         20);
 }
-
-document.addEventListener("keypress", (e) => {
-    console.log(e.key);
-    if (e.key.toLowerCase() === "d") {
-        player.moveRight();
-    }
-    if (e.key.toLowerCase() === "a") {
-        console.log("moving left");
-        player.moveLeft();
-    }
-    if (e.key === " ") {
-        console.log("Firing Bullet");
-        player.fireBullet();
-    }
-})
