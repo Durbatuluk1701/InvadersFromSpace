@@ -6,7 +6,7 @@ let enemyArr = [];
 
 const Globals = {
     gameStarted: false,
-    tick: 200,
+    tick: 100,
     canFire: true,
     Player: {
         width: 20,
@@ -22,13 +22,15 @@ const Globals = {
         size: 10,
         speed: 5,
         color: "lime",
-        cooldown: 200
+        cooldown: 100
     }
 }
 
-for (let i = 0; i < Globals.Goober.numberWidth * Globals.Goober.width; i += Globals.Goober.width) {
-    for (let j = 0; j < Globals.Goober.numberHeight * Globals.Goober.height; j += Globals.Goober.height) {
-        enemyArr.push([i, j]);
+const populateEnemyArr = () => {
+    for (let i = 0; i < Globals.Goober.numberWidth * Globals.Goober.width; i += Globals.Goober.width) {
+        for (let j = 0; j < Globals.Goober.numberHeight * Globals.Goober.height; j += Globals.Goober.height) {
+            enemyArr.push([i, j]);
+        }
     }
 }
 
@@ -53,12 +55,13 @@ let Player = {
 
 let Game = {
     gameInterval: 0,
+    level: 1,
     direction: "right",
-    opStack: [],
+    opQueue: [],
     gameTick: () => {
-        // Take Next OpStack
-        if (Game.opStack.length > 0) {
-            (Game.opStack.shift())();
+        // Take Next OpQueues
+        if (Game.opQueue.length > 0) {
+            (Game.opQueue.shift())();
         }
         // Check Hit Bullets
         for (let i = 0; i < Bullets.bulletList.length; i++) {
@@ -79,7 +82,7 @@ let Game = {
         Bullets.handleBullets();
         // Check Game Over
         if (enemyArr.length === 0) {
-            stopGame(true);
+            upgradeLevel();
         }
     },
     startGame: () => {
@@ -99,7 +102,7 @@ const handleKeys = (e) => {
     if (e.key === " ") {
         console.log("Firing Bullet");
         if (Globals.canFire) {
-            Game.opStack.push(() => { Player.fireBullet() });
+            Game.opQueue.push(() => { Player.fireBullet() });
             Globals.canFire = false;
             setTimeout(() => {
                 Globals.canFire = true;
@@ -108,11 +111,29 @@ const handleKeys = (e) => {
     }
 }
 
+const upgradeLevel = () => {
+    alert("Beat Level " + Game.level);
+    Game.level += 1;
+    if (Game.level === 6) {
+        stopGame(true);
+    }
+    Globals.tick -= (Game.level * 5);
+    Bullets.bulletList = [];
+    clearCanvas();
+    drawPlayer();
+    populateEnemyArr();
+    moveGoobers();
+    clearInterval(Game.gameInterval);
+    Game.startGame();
+}
+
 const stopGame = (winner) => {
     if (!winner) {
-        alert("Game Over You LOSE!");
+        if (confirm("Game Over - You LOSE!")) {
+            location.reload();
+        }
     } else {
-        alert("Victory!");
+        alert("Victory - You beat all levels!");
     }
     clearCanvas();
     document.removeEventListener("keypress", handleKeys);
@@ -222,6 +243,7 @@ const startGame = () => {
     button.hidden = true;
     button.disabled = true;
     drawPlayer();
+    populateEnemyArr();
     moveGoobers();
     document.addEventListener("keypress", handleKeys)
     Game.startGame();
