@@ -1,21 +1,33 @@
 let canvas = document.querySelector("#gameCanvas");
 let context = canvas.getContext("2d");
-let goober = new Image();
-goober.src = "Goober.png";
+let goober = new Image(20, 20);
+goober.src = "Images\\Goober.png";
 let enemyArr = [];
 
 const Globals = {
-    playerSize: 20,
-    gooberSize: 20,
-    bulletSize: 10,
-    bulletColor: "lime",
-    tick: 500,
-    bulletCooldown: 200,
-    canFire: true
+    gameStarted: false,
+    tick: 200,
+    canFire: true,
+    Player: {
+        width: 20,
+        height: 20
+    },
+    Goober: {
+        width: 20,
+        height: 20,
+        numberWidth: 10,
+        numberHeight: 5
+    },
+    Bullet: {
+        size: 10,
+        speed: 5,
+        color: "lime",
+        cooldown: 200
+    }
 }
 
-for (let i = 0; i < 200; i += 20) {
-    for (let j = 0; j < 100; j += 20) {
+for (let i = 0; i < Globals.Goober.numberWidth * Globals.Goober.width; i += Globals.Goober.width) {
+    for (let j = 0; j < Globals.Goober.numberHeight * Globals.Goober.height; j += Globals.Goober.height) {
         enemyArr.push([i, j]);
     }
 }
@@ -91,7 +103,7 @@ const handleKeys = (e) => {
             Globals.canFire = false;
             setTimeout(() => {
                 Globals.canFire = true;
-            }, Globals.bulletCooldown);
+            }, Globals.Bullet.cooldown);
         }
     }
 }
@@ -137,13 +149,13 @@ const Bullets = {
         for (let i = 0; i < Bullets.bulletList.length; i++) {
             let bullet = Bullets.bulletList[i];
             context.beginPath();
-            context.strokeStyle = Globals.bulletColor;
-            context.moveTo(bullet[0], canvas.height - Globals.gooberSize - bullet[1]);
-            context.lineTo(bullet[0], canvas.height - Globals.bulletSize - Globals.gooberSize - bullet[1]);
+            context.strokeStyle = Globals.Bullet.color;
+            context.moveTo(bullet[0], canvas.height - Globals.Goober.height - bullet[1]);
+            context.lineTo(bullet[0], canvas.height - Globals.Bullet.size - Globals.Goober.height - bullet[1]);
             context.stroke();
             context.stroke();
             context.stroke();
-            bullet[1] += 2.5;
+            bullet[1] += Globals.Bullet.speed;
         }
     }
 }
@@ -151,10 +163,10 @@ const Bullets = {
 const fillGoobers = (enemyBoard) => {
     clearUpperCanvas();
     for (let i = 0; i < enemyBoard.length; i++) {
-        if (enemyBoard[i][1] + 2 * Globals.gooberSize >= canvas.height) {
+        if (enemyBoard[i][1] + 2 * Globals.Goober.height >= canvas.height) {
             throw "Game Over Error";
         }
-        context.drawImage(goober, enemyBoard[i][0], enemyBoard[i][1], Globals.gooberSize, Globals.gooberSize);
+        context.drawImage(goober, enemyBoard[i][0], enemyBoard[i][1], Globals.Goober.width, Globals.Goober.height);
     }
 }
 
@@ -206,7 +218,11 @@ const moveGoobers = () => {
 }
 
 const startGame = () => {
+    let button = document.querySelector("#startButton");
+    button.hidden = true;
+    button.disabled = true;
     drawPlayer();
+    moveGoobers();
     document.addEventListener("keypress", handleKeys)
     Game.startGame();
 }
@@ -216,7 +232,7 @@ const drawPlayer = () => {
     clearPlayerRow();
     context.fillRect(
         Player.coords[0],
-        canvas.height - 20,
-        20,
-        20);
+        canvas.height - Globals.Player.height,
+        Globals.Player.width,
+        Globals.Player.height);
 }
