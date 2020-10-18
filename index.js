@@ -2,6 +2,8 @@ let canvas = document.querySelector("#gameCanvas");
 let context = canvas.getContext("2d");
 let goober = new Image(20, 20);
 goober.src = "Images\\Goober.png";
+let playerImg = new Image(20, 20);
+playerImg.src = "Images\\Player.png";
 let enemyArr = [];
 
 const Globals = {
@@ -134,6 +136,7 @@ const stopGame = (winner) => {
         }
     } else {
         alert("Victory - You beat all levels!");
+        location.reload();
     }
     clearCanvas();
     document.removeEventListener("keypress", handleKeys);
@@ -250,11 +253,12 @@ const startGame = () => {
 }
 
 const drawPlayer = () => {
-    context.fillStyle = "red";
     clearPlayerRow();
-    context.fillRect(
+    context.drawImage(
+        playerImg,
         Player.coords[0],
         canvas.height - Globals.Player.height,
         Globals.Player.width,
-        Globals.Player.height);
+        Globals.Player.height
+    );
 }
