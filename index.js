@@ -6,6 +6,12 @@ let playerImg = new Image(20, 20);
 playerImg.src = "Images\\Player.png";
 let enemyArr = [];
 
+const Sounds = {
+    bullet: new Audio("Sounds\\laser.mp3"),
+    victory: new Audio("Sounds\\victory.mp3"),
+    death: new Audio("Sounds\\death.mp3")
+}
+
 const Globals = {
     gameStarted: false,
     tick: 100,
@@ -51,6 +57,7 @@ let Player = {
         drawPlayer();
     },
     fireBullet: () => {
+        Sounds.bullet.play();
         Bullets.bulletList.push([Player.coords[0] + 10, 0]);
     }
 }
@@ -114,6 +121,7 @@ const handleKeys = (e) => {
 }
 
 const upgradeLevel = () => {
+    Sounds.victory.play();
     alert("Beat Level " + Game.level);
     Game.level += 1;
     if (Game.level === 6) {
@@ -131,6 +139,7 @@ const upgradeLevel = () => {
 
 const stopGame = (winner) => {
     if (!winner) {
+        Sounds.death.play();
         if (confirm("Game Over - You LOSE!")) {
             location.reload();
         }

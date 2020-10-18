@@ -10,7 +10,7 @@ body {
     display: flex;
     flex-direction: column;
 }
-h1 {
+h1, h4, footer > * {
     margin: auto;
     width: 100%;
     text-align: center;
@@ -27,4 +27,7 @@ h1 {
     height: 300px;
     background-color: black;
     margin: auto;
+}
+a:visited {
+    color: white;
 }
